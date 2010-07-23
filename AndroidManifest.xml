@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      android:versionCode="1"
+      android:versionName="1.0" package="com.corner23.android.i9000.notifier">
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <activity android:name=".ScreenLED"
+                  android:label="@string/app_name"
+                  android:screenOrientation="portrait">
+        </activity>
+		<service android:name="MissEventNotifierService" />
+		<receiver android:name=".receivers.StartServiceReceiver">
+			<intent-filter>
+       			<action android:name="android.intent.action.BOOT_COMPLETED" />
+       			<action android:name="android.intent.action.USER_PRESENT" />
+       		</intent-filter>
+		</receiver>
+ 		<receiver android:name=".receivers.SMSReceiver">
+			<intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+ 		</receiver>
+    </application>
+    <uses-sdk android:minSdkVersion="7" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.RECEIVE_SMS" />
+</manifest> 
