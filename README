@@ -12,3 +12,13 @@ A red dot will be on screen if there're missed phone call or sms.
 Just for fun, any questions feel free contact me :-)
 
 E-mail: shakalaca AT gmail dot com
+
+2010-07-25:
+Use handler instead of thread
+Add customization options for dot view: color
+Add LED mode
+Add duration
+Add preference
+
+2010-07-23:
+Initial version
