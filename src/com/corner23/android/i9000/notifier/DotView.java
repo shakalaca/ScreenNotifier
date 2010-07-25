@@ -19,16 +19,24 @@ public class DotView extends View {
 	public DotView(Context context) {
 		super(context);
 		
+		mDrawable = new ShapeDrawable(new RectShape());
+		mDrawable.getPaint().setColor(Color.RED);
+	}
+
+	protected void onDraw(Canvas canvas) {
+		canvas.drawColor(Color.BLACK);
+		mDrawable.draw(canvas);
+	}
+	
+	public void randPos() {
 		Random rand = new Random();
 		Ypos = rand.nextInt(150);
 		Xpos = rand.nextInt(150);
 		
-		mDrawable = new ShapeDrawable(new RectShape());
-		mDrawable.getPaint().setColor(Color.RED);
 		mDrawable.setBounds(Xpos, Ypos, Xpos + width, Ypos + height);
 	}
-
-	protected void onDraw(Canvas canvas) {
-		mDrawable.draw(canvas);
+	
+	public void setColor(int color) {
+		mDrawable.getPaint().setColor(color);
 	}
 }

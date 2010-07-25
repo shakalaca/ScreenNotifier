@@ -1,5 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, ScreenNotifier!</string>
     <string name="app_name">ScreenNotifier</string>
+
+	<string name="mem_pref_pick_color_text">Pick a color</string>
+	
+	<string name="men_pref_appearance_title_text">Appearance</string>
+	<string name="men_pref_appearance_summary_text">Dot or LED</string>
+	<string-array name="men_appearance_entries">
+		<item>Random dot</item>
+		<item>LED</item>
+	</string-array>
+
+	<string-array name="men_appearance_entry_values">
+		<item>0</item>
+		<item>1</item>
+	</string-array>
+
+	<string name="men_pref_display_interval_title_text">Interval</string>
+	<string name="men_pref_display_interval_summary_text">Seconds</string>
+	<string-array name="men_display_interval_entry_values">
+		<item>3</item>
+		<item>7</item>
+		<item>10</item>
+	</string-array>
+
+	<string name="men_pref_dot_color_title_text">Color</string>
+	<string name="men_pref_dot_color_summary_text">Customize color of dot</string>
+	<string-array name="men_dot_color_entries">
+		<item>Red</item>
+		<item>Green</item>
+		<item>Blue</item>
+		<item>Yellow</item>
+		<item>Magenta</item>
+		<item>Cyan</item>
+		<item>White</item>
+		<item>Light gray</item>
+		<item>Gray</item>
+		<item>Dark gray</item>
+	</string-array>
 </resources>
