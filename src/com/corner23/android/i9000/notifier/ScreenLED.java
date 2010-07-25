@@ -156,22 +156,4 @@ public class ScreenLED extends Activity {
 			mHandler.removeCallbacks(blinkLED);
 		}		
 	}	
-	
-	/*
-		Color.LTGRAY : ffcccccc
-		Color.DKGRAY ff444444
-		Color.GRAY : ff888888
-
-		Color.WHITE : ffffffff
-		
-		Color.YELLOW : ffffff00
-		Color.MAGENTA ffff00ff
-		Color.CYAN ff00ffff
-		
-		Color.RED : ffff0000
-		Color.GREEN : ff00ff00
-		Color.BLUE ff0000ff
-
-	 * 
-	 */
 }

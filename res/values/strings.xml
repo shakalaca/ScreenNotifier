@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">ScreenNotifier</string>
 
+	<string name="mem_pref_enable_text">Enable</string>
+
 	<string name="mem_pref_pick_color_text">Pick a color</string>
 	
 	<string name="men_pref_appearance_title_text">Appearance</string>

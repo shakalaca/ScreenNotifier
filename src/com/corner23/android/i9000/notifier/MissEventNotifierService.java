@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -22,6 +23,7 @@ public class MissEventNotifierService extends Service {
 	private final Handler handler = new Handler();
 	
 	private static boolean MissEventNotifyIsOn = false;
+	private static boolean bEnabled = false;
 	
 	private static PowerManager pm;
 	private static TelephonyManager tm;
@@ -72,29 +74,35 @@ public class MissEventNotifierService extends Service {
 	}
 
 	@Override
-	public void onCreate() {				
-		startForeground(0, null);
-		
+	public void onCreate() {	
+		Log.d(TAG, "onCreate");
+
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
-
-		final IntentFilter filter = new IntentFilter();
-		filter.addAction(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		registerReceiver(screenStateBR, filter);
 	}
-	
+
 	@Override
 	public void onDestroy() {
+		Log.d(TAG, "onDestroy");
 		super.onDestroy();
 		
-		unregisterReceiver(screenStateBR);
+		disableListeners();
 	}
 
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
+		
+		SharedPreferences prefs = this.getSharedPreferences(Settings.SHARED_PREFS_NAME, 0);
+		if (prefs.getBoolean(Settings.PREF_ENABLE, true)) {
+			Log.d(TAG, "Service enabled");
+			startForeground(0, null);			
+			enableListeners();			
+		} else {
+			Log.d(TAG, "Service disabled");
+			this.stopSelf();
+			return;
+		}
 		
 		if (intent != null) {
 			if (intent.getBooleanExtra("reset", false)) {
@@ -108,6 +116,26 @@ public class MissEventNotifierService extends Service {
 					startScreenLEDWrapper();
 				}
 			}
+		}
+	}
+
+	private void enableListeners() {		
+		if (!bEnabled) {
+			tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+	
+			final IntentFilter filter = new IntentFilter();
+			filter.addAction(Intent.ACTION_SCREEN_ON);
+			filter.addAction(Intent.ACTION_SCREEN_OFF);
+			registerReceiver(screenStateBR, filter);
+			bEnabled = true;
+		}
+	}
+	
+	private void disableListeners() {
+		if (bEnabled) {
+			tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+			unregisterReceiver(screenStateBR);
+			bEnabled = false;
 		}
 	}
 	

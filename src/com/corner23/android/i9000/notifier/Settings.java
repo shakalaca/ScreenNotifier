@@ -1,6 +1,7 @@
 package com.corner23.android.i9000.notifier;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
@@ -8,9 +9,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class Settings extends PreferenceActivity implements ColorPickerDialog.OnColorChangedListener  {
+public class Settings extends PreferenceActivity
+	implements ColorPickerDialog.OnColorChangedListener, SharedPreferences.OnSharedPreferenceChangeListener  {
 
 	public static final String SHARED_PREFS_NAME = "men_settings";
+	public static final String PREF_ENABLE = "enable";
 	public static final String PREF_APPEARANCE = "appearance";
 	public static final String PREF_DISPLAY_INTERVAL = "display_interval";
 	public static final String PREF_DOT_COLOR = "dot_color";
@@ -24,7 +27,7 @@ public class Settings extends PreferenceActivity implements ColorPickerDialog.On
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         
-        getPreferenceManager().setSharedPreferencesName(SHARED_PREFS_NAME);
+		getPreferenceManager().setSharedPreferencesName(SHARED_PREFS_NAME);
 	    addPreferencesFromResource(R.xml.preferences);
 	    setContentView(R.layout.settings);
 
@@ -41,8 +44,7 @@ public class Settings extends PreferenceActivity implements ColorPickerDialog.On
 	    mTextView = (TextView) findViewById(R.id.Preview);
 	    mTextView.setBackgroundColor(getSharedPreferences(SHARED_PREFS_NAME, 0).getInt(PREF_DOT_COLOR, Color.RED));
 	    
-		Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
-		startService(serviceIntent);
+        getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
 	@Override
@@ -50,4 +52,17 @@ public class Settings extends PreferenceActivity implements ColorPickerDialog.On
 		Settings.this.getSharedPreferences(SHARED_PREFS_NAME, 0).edit().putInt(PREF_DOT_COLOR, color).commit();
 	    mTextView.setBackgroundColor(color);
 	}
+	
+    @Override
+    protected void onDestroy() {
+        getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+        super.onDestroy();
+    }
+
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    	if (key.equals(PREF_ENABLE)) {
+            Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
+    		startService(serviceIntent);
+    	}
+    }
 }

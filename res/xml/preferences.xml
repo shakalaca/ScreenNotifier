@@ -1,5 +1,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+	<CheckBoxPreference
+		android:key="enable"
+		android:title="@string/mem_pref_enable_text"
+		android:defaultValue="true" />
+			
 	<ListPreference android:key="appearance"
 		android:layout="?android:attr/preferenceLayoutChild"
 		android:title="@string/men_pref_appearance_title_text"
@@ -7,7 +12,8 @@
 		android:entries="@array/men_appearance_entries"
 		android:entryValues="@array/men_appearance_entry_values"
 		android:dialogTitle="@string/men_pref_appearance_title_text"
-		android:defaultValue="0" />
+		android:defaultValue="0"
+		android:dependency="enable" />
 
 	<ListPreference android:key="display_interval"
 		android:layout="?android:attr/preferenceLayoutChild"
@@ -16,6 +22,7 @@
 		android:entries="@array/men_display_interval_entry_values"
 		android:entryValues="@array/men_display_interval_entry_values"
 		android:dialogTitle="@string/men_pref_display_interval_title_text"
-		android:defaultValue="7" />
+		android:defaultValue="7"
+		android:dependency="enable" />
 
 </PreferenceScreen>
