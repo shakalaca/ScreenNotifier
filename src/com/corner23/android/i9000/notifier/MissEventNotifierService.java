@@ -1,15 +1,11 @@
 package com.corner23.android.i9000.notifier;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -20,20 +16,18 @@ import android.util.Log;
 public class MissEventNotifierService extends Service {
 	private static final String TAG = "MissEventNotifierService";
 	
-	private final Handler handler = new Handler();
-	
 	private static boolean MissEventNotifyIsOn = false;
 	private static boolean bEnabled = false;
 	
-	private static PowerManager pm;
 	private static TelephonyManager tm;
+	private static PowerManager pm;
 	private static WakeLock wl;
 	private static ScreenLED mScreenLED = null;
 
-	private final Runnable showNotificationRunnable = new Runnable() {
+	private final Runnable stopNotificationRunnable = new Runnable() {
 		public void run() {
 			if (mScreenLED != null) {
-				mScreenLED.displayNotification();
+				mScreenLED.stopNotification();
 			}
 		}
 	};
@@ -48,9 +42,8 @@ public class MissEventNotifierService extends Service {
 			case TelephonyManager.CALL_STATE_IDLE:
 				if (ringing && !offhook) {
 					MissEventNotifyIsOn = true;
-					
-					if (mScreenLED != null) {
-						startScreenLEDWrapper();
+					if (!pm.isScreenOn()) {
+						startNotification();
 					}
 				}
 				ringing = false;
@@ -109,13 +102,21 @@ public class MissEventNotifierService extends Service {
 			if (intent.getBooleanExtra("reset", false)) {
 				Log.d(TAG, "reset");
 				MissEventNotifyIsOn = false;
+				if (mScreenLED != null) {
+					mScreenLED.runOnUiThread(stopNotificationRunnable);
+				}
 			} else if (intent.getBooleanExtra("shownotify", false)) {
 				Log.d(TAG, "show notify");
 				MissEventNotifyIsOn = true;
-				
-				if (mScreenLED != null) {
-					startScreenLEDWrapper();
+				if (!pm.isScreenOn()) {
+					startNotification();
 				}
+			} else if (intent.getBooleanExtra("lock", false)) {
+				Log.d(TAG, "lock");
+				acquireWakeLock();
+			} else if (intent.getBooleanExtra("unlock", false)) {
+				Log.d(TAG, "unlock");
+				cancelWakeLock();
 			}
 		}
 	}
@@ -148,19 +149,15 @@ public class MissEventNotifierService extends Service {
 		mScreenLED = null;
 	}
 	
-	private void startScreenLED() {
-		if (mScreenLED == null) {
-			final Intent intent = new Intent(MissEventNotifierService.this, ScreenLED.class);
-			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			intent.addFlags(
-					Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED |
-					Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET |
-					Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-			
-			startActivity(intent);
-		} else {
-			mScreenLED.runOnUiThread(showNotificationRunnable);
-		}
+	private void startNotification() {
+		final Intent intent = new Intent(MissEventNotifierService.this, ScreenLED.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.addFlags(
+				Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED |
+				Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET |
+				Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+		
+		startActivity(intent);
 	}
 	
 	private final BroadcastReceiver screenStateBR = new BroadcastReceiver() {
@@ -170,15 +167,14 @@ public class MissEventNotifierService extends Service {
 			Log.d(TAG, "onReceive");
 			if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
 				if (MissEventNotifyIsOn) {
-					startScreenLEDWrapper();
+					startNotification();
 				}
 			}
 		}
 	};
-	
+
 	private void acquireWakeLock() {
 		wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "MissEventNotifier");
-		// wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "MissEventNotifier");
 		wl.acquire();
 	}
 	
@@ -187,21 +183,5 @@ public class MissEventNotifierService extends Service {
 			wl.release();
 			wl = null;
 		}
-	}
-	
-	private void startScreenLEDWrapper() {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				acquireWakeLock();
-				startScreenLED();
-				
-				new Timer().schedule(new TimerTask() {
-					@Override
-					public void run() {
-						cancelWakeLock();
-					}}, 600);
-			}			
-		});
 	}
 }

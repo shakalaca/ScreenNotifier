@@ -5,10 +5,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Window;
@@ -43,7 +47,7 @@ public class ScreenLED extends Activity {
 			bIsLEDOn = !bIsLEDOn;
 			
 			mHandler.removeCallbacks(blinkLED);
-			mHandler.postDelayed(blinkLED, mInterval * 1000);
+			mHandler.postDelayed(blinkLED, bIsLEDOn ? 200 : mInterval * 1000);
 		}
 	};
 	 
@@ -61,9 +65,9 @@ public class ScreenLED extends Activity {
         this.getWindow().addFlags(
         	WindowManager.LayoutParams.FLAG_FULLSCREEN | 
         	WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | 
+        	WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE /*| 
         	WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON | 
-        	WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | 
-        	WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        	WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON */);
 
         mDotView = new DotView(this);		
         this.setContentView(mDotView);        
@@ -81,6 +85,10 @@ public class ScreenLED extends Activity {
 		super.onStart();
 		
         MissEventNotifierService.registerActivity(this);
+
+		Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
+		serviceIntent.putExtra("lock", true);
+    	startService(serviceIntent);
 	}
 
 	@Override
@@ -89,6 +97,10 @@ public class ScreenLED extends Activity {
 		super.onStop();
 		
 		MissEventNotifierService.unregisterActivity();
+
+		Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
+		serviceIntent.putExtra("unlock", true);
+    	startService(serviceIntent);
 	}
 	
 	@Override
@@ -97,7 +109,6 @@ public class ScreenLED extends Activity {
 		super.onPause();
 		
 		stopNotification();
-        enableTouchScreen(true);
 	}
 
 	@Override
@@ -111,8 +122,20 @@ public class ScreenLED extends Activity {
 		mColor = prefs.getInt(Settings.PREF_DOT_COLOR, Color.RED);
 		
 		displayNotification();
-        enableTouchScreen(false);
     }
+	
+	private void setBacklight(boolean minOn) {
+		try {
+			File _file = new File("/sys/class/backlight/s5p_bl/brightness");
+			if (_file != null) {
+				FileWriter _fw = new FileWriter(_file);
+				_fw.write(minOn ? "20" : "0");
+				_fw.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 		
+	}
 	
 	private void enableTouchScreen(boolean enable) {
 		try {
@@ -143,11 +166,14 @@ public class ScreenLED extends Activity {
 	public void displayNotification() {
 		if (mAppearance == Settings.PREF_APPEARANCE_DOT) {
 			mHandler.post(showDot);
+			setBacklight(true);
 		} else {
 			mDotView.hideDot();
 			mDotView.invalidate();
 			mHandler.post(blinkLED);
+			setBacklight(false);
 		}
+        enableTouchScreen(false);
 	}
 	
 	public void stopNotification() {
@@ -156,5 +182,7 @@ public class ScreenLED extends Activity {
 		} else {
 			mHandler.removeCallbacks(blinkLED);
 		}		
+		setBacklight(true);
+        enableTouchScreen(true);
 	}	
 }
