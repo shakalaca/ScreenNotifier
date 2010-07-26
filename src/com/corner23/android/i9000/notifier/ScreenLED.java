@@ -21,6 +21,9 @@ import android.view.WindowManager;
 public class ScreenLED extends Activity {
 	private final static String TAG = "ScreenLED";
 
+	private static PowerManager pm;
+	private WakeLock wl = null;
+	
 	private int mColor;
 	private int mAppearance = Settings.PREF_APPEARANCE_DOT;
 	private int mInterval = 7;
@@ -50,6 +53,13 @@ public class ScreenLED extends Activity {
 			mHandler.postDelayed(blinkLED, bIsLEDOn ? 200 : mInterval * 1000);
 		}
 	};
+	
+	private final Runnable delayedAcquireWakeLock = new Runnable() {
+		@Override
+		public void run() {
+			acquireWakeLock();
+		}
+	};
 	 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -71,6 +81,8 @@ public class ScreenLED extends Activity {
 
         mDotView = new DotView(this);		
         this.setContentView(mDotView);        
+        
+		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	}
 
 	@Override
@@ -86,9 +98,10 @@ public class ScreenLED extends Activity {
 		
         MissEventNotifierService.registerActivity(this);
 
-		Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
-		serviceIntent.putExtra("lock", true);
-    	startService(serviceIntent);
+    	// acquireWakeLock();
+        // dirty trick for enabling keyguard
+        mHandler.removeCallbacks(delayedAcquireWakeLock);
+		mHandler.postDelayed(delayedAcquireWakeLock, 7000);
 	}
 
 	@Override
@@ -99,8 +112,11 @@ public class ScreenLED extends Activity {
 		MissEventNotifierService.unregisterActivity();
 
 		Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
-		serviceIntent.putExtra("unlock", true);
+		serviceIntent.putExtra("reset", true);
     	startService(serviceIntent);
+
+		mHandler.removeCallbacks(delayedAcquireWakeLock);		
+    	cancelWakeLock();    	
 	}
 	
 	@Override
@@ -124,6 +140,8 @@ public class ScreenLED extends Activity {
 		displayNotification();
     }
 	
+	// for reference, since SCREEN_DIM_WAKE_LOCK do this also
+	@SuppressWarnings("unused")
 	private void setBacklight(boolean minOn) {
 		try {
 			File _file = new File("/sys/class/backlight/s5p_bl/brightness");
@@ -166,12 +184,12 @@ public class ScreenLED extends Activity {
 	public void displayNotification() {
 		if (mAppearance == Settings.PREF_APPEARANCE_DOT) {
 			mHandler.post(showDot);
-			setBacklight(true);
+			//setBacklight(true);
 		} else {
 			mDotView.hideDot();
 			mDotView.invalidate();
 			mHandler.post(blinkLED);
-			setBacklight(false);
+			//setBacklight(false);
 		}
         enableTouchScreen(false);
 	}
@@ -182,7 +200,21 @@ public class ScreenLED extends Activity {
 		} else {
 			mHandler.removeCallbacks(blinkLED);
 		}		
-		setBacklight(true);
+		// setBacklight(true);
         enableTouchScreen(true);
 	}	
+
+	private void acquireWakeLock() {
+		if (wl == null) {
+			wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, TAG);
+			wl.acquire();
+		}
+	}
+	
+	private void cancelWakeLock() {
+		if (wl != null) {
+			wl.release();
+			wl = null;
+		}
+	}
 }

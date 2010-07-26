@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -21,9 +20,8 @@ public class MissEventNotifierService extends Service {
 	
 	private static TelephonyManager tm;
 	private static PowerManager pm;
-	private static WakeLock wl;
 	private static ScreenLED mScreenLED = null;
-
+	
 	private final Runnable stopNotificationRunnable = new Runnable() {
 		public void run() {
 			if (mScreenLED != null) {
@@ -99,11 +97,14 @@ public class MissEventNotifierService extends Service {
 		}
 		
 		if (intent != null) {
+			// user press menu key 
 			if (intent.getBooleanExtra("reset", false)) {
 				Log.d(TAG, "reset");
-				MissEventNotifyIsOn = false;
-				if (mScreenLED != null) {
-					mScreenLED.runOnUiThread(stopNotificationRunnable);
+				if (MissEventNotifyIsOn) {
+					MissEventNotifyIsOn = false;
+					if (mScreenLED != null) {
+						mScreenLED.runOnUiThread(stopNotificationRunnable);
+					}
 				}
 			} else if (intent.getBooleanExtra("shownotify", false)) {
 				Log.d(TAG, "show notify");
@@ -111,12 +112,6 @@ public class MissEventNotifierService extends Service {
 				if (!pm.isScreenOn()) {
 					startNotification();
 				}
-			} else if (intent.getBooleanExtra("lock", false)) {
-				Log.d(TAG, "lock");
-				acquireWakeLock();
-			} else if (intent.getBooleanExtra("unlock", false)) {
-				Log.d(TAG, "unlock");
-				cancelWakeLock();
 			}
 		}
 	}
@@ -166,22 +161,10 @@ public class MissEventNotifierService extends Service {
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive");
 			if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-				if (MissEventNotifyIsOn) {
+				if (MissEventNotifyIsOn && mScreenLED == null) {
 					startNotification();
 				}
 			}
 		}
 	};
-
-	private void acquireWakeLock() {
-		wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "MissEventNotifier");
-		wl.acquire();
-	}
-	
-	private void cancelWakeLock() {
-		if (wl != null) {
-			wl.release();
-			wl = null;
-		}
-	}
 }
