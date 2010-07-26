@@ -76,9 +76,12 @@ public class MissEventNotifierService extends Service {
 	@Override
 	public void onCreate() {	
 		Log.d(TAG, "onCreate");
+		super.onCreate();
 
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+		enableListeners();			
 	}
 
 	@Override
@@ -96,8 +99,6 @@ public class MissEventNotifierService extends Service {
 		SharedPreferences prefs = this.getSharedPreferences(Settings.SHARED_PREFS_NAME, 0);
 		if (prefs.getBoolean(Settings.PREF_ENABLE, true)) {
 			Log.d(TAG, "Service enabled");
-			startForeground(0, null);			
-			enableListeners();			
 		} else {
 			Log.d(TAG, "Service disabled");
 			this.stopSelf();
