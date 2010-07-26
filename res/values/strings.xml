@@ -23,7 +23,7 @@
 	<string-array name="men_display_interval_entry_values">
 		<item>3</item>
 		<item>7</item>
-		<item>10</item>
+		<item>12</item>
 	</string-array>
 
 	<string name="men_pref_dot_color_title_text">Color</string>
