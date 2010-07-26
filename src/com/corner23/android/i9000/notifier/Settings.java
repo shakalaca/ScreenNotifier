@@ -1,16 +1,16 @@
 package com.corner23.android.i9000.notifier;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class Settings extends PreferenceActivity
-	implements ColorPickerDialog.OnColorChangedListener, SharedPreferences.OnSharedPreferenceChangeListener  {
+	implements ColorPickerDialog.OnColorChangedListener {
 
 	public static final String SHARED_PREFS_NAME = "men_settings";
 	public static final String PREF_ENABLE = "enable";
@@ -43,8 +43,6 @@ public class Settings extends PreferenceActivity
 	    
 	    mTextView = (TextView) findViewById(R.id.Preview);
 	    mTextView.setBackgroundColor(getSharedPreferences(SHARED_PREFS_NAME, 0).getInt(PREF_DOT_COLOR, Color.RED));
-	    
-        getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
 	@Override
@@ -53,16 +51,14 @@ public class Settings extends PreferenceActivity
 	    mTextView.setBackgroundColor(color);
 	}
 	
+	
     @Override
-    protected void onDestroy() {
-        getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-        super.onDestroy();
-    }
-
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-    	if (key.equals(PREF_ENABLE)) {
-            Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
-    		startService(serviceIntent);
-    	}
-    }
+	protected void onPause() {
+    	Log.d("Settings", "onPause");
+		super.onPause();
+		
+		// start service to trigger on/off
+		Intent serviceIntent = new Intent(this, MissEventNotifierService.class);
+    	startService(serviceIntent);
+	}
 }
