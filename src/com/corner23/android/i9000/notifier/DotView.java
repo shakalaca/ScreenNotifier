@@ -15,6 +15,7 @@ public class DotView extends View {
 	private int Ypos = 0;
 	private int Xpos = 0;
 	private static final int width = 8, height = 8;
+	private boolean bShowDot = true;
 	
 	public DotView(Context context) {
 		super(context);
@@ -25,18 +26,23 @@ public class DotView extends View {
 
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
-		mDrawable.draw(canvas);
+		if (bShowDot) {
+			mDrawable.draw(canvas);
+		}
 	}
 	
-	public void randPos() {
+	public void hideDot() {
+		bShowDot = false;
+	}
+	
+	public void showDot(int color) {
+		bShowDot = true;
+
 		Random rand = new Random();
 		Ypos = rand.nextInt(150);
 		Xpos = rand.nextInt(150);
 		
 		mDrawable.setBounds(Xpos, Ypos, Xpos + width, Ypos + height);
-	}
-	
-	public void setColor(int color) {
 		mDrawable.getPaint().setColor(color);
 	}
 }

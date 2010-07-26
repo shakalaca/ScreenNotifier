@@ -20,15 +20,14 @@ public class ScreenLED extends Activity {
 	private int mColor;
 	private int mAppearance = Settings.PREF_APPEARANCE_DOT;
 	private int mInterval = 7;
-	DotView mDotView;
+	private DotView mDotView;
 	private final Handler mHandler = new Handler();
 
 	private final Runnable showDot = new Runnable() {
 		public void run() {
 			mDotView.post(new Runnable() {
 				public void run() {
-					mDotView.randPos();
-					mDotView.setColor(mColor);
+					mDotView.showDot(mColor);
 					mDotView.invalidate();
 				}
 			});
@@ -143,9 +142,11 @@ public class ScreenLED extends Activity {
 	
 	public void displayNotification() {
 		if (mAppearance == Settings.PREF_APPEARANCE_DOT) {
-			mHandler.postDelayed(showDot, mInterval * 1000);
+			mHandler.post(showDot);
 		} else {
-			mHandler.postDelayed(blinkLED, mInterval * 1000);
+			mDotView.hideDot();
+			mDotView.invalidate();
+			mHandler.post(blinkLED);
 		}
 	}
 	
